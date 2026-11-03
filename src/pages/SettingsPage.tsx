@@ -26,7 +26,6 @@ export default function SettingsPage() {
   const [form, setForm] = useState({
     starting_balance: String(settings.starting_balance),
     nas100_point_value: String(settings.nas100_point_value),
-    default_commission: String(settings.default_commission),
     timezone: settings.timezone,
     theme: settings.theme,
     currency: settings.currency,
@@ -50,10 +49,8 @@ export default function SettingsPage() {
     const errs: Record<string, string> = {};
     const bal = Number(form.starting_balance);
     const pv = Number(form.nas100_point_value);
-    const com = form.default_commission.trim() === "" ? 0 : Number(form.default_commission);
     if (form.starting_balance.trim() === "" || !Number.isFinite(bal) || bal < 0) errs.starting_balance = "Enter 0 or more";
     if (form.nas100_point_value.trim() === "" || !Number.isFinite(pv) || pv <= 0) errs.nas100_point_value = "Must be greater than 0";
-    if (!Number.isFinite(com) || com < 0) errs.default_commission = "Enter 0 or more";
     try {
       new Intl.DateTimeFormat("en-US", { timeZone: form.timezone });
     } catch {
@@ -66,7 +63,6 @@ export default function SettingsPage() {
       ...settings,
       starting_balance: bal,
       nas100_point_value: pv,
-      default_commission: com,
       timezone: form.timezone,
       theme: form.theme as Settings["theme"],
       currency: form.currency,
@@ -110,9 +106,6 @@ export default function SettingsPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="NAS100 point value ($ per point, per 1.0 lot)" error={errors.nas100_point_value} hint="Check your broker's contract specification. Applies to trades saved from now on.">
                 <Input type="number" step="any" min="0" value={form.nas100_point_value} invalid={Boolean(errors.nas100_point_value)} onChange={(e) => set("nas100_point_value", e.target.value)} />
-              </Field>
-              <Field label="Default commission ($ per trade)" error={errors.default_commission} hint="Pre-filled when adding a trade">
-                <Input type="number" step="0.01" min="0" value={form.default_commission} invalid={Boolean(errors.default_commission)} onChange={(e) => set("default_commission", e.target.value)} />
               </Field>
             </div>
             <div className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">

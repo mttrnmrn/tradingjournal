@@ -8,7 +8,7 @@ React + TypeScript + Vite + Tailwind CSS, Recharts, Supabase (Postgres, Auth, St
 - **Dashboard**: 10 headline stats, date filter (Today / Week / Month / Year / All / Custom), cumulative P&L (daily / weekly / monthly), daily P&L bars, win/loss donut, performance by instrument, trading statistics.
 - **Trading Journal**: add / edit / delete / duplicate, detail view, search, filters (instrument, direction, session, result, tag, date), sortable columns, 17 ICT / price action tags (multi-select), before-entry and after-exit screenshots (PNG/JPG/JPEG, private storage).
 - **Analytics**: overall, by instrument, by session, long vs short, winning/losing analysis, monthly P&L calendar with per-day trade list, tag performance (multi-tag aware).
-- **Calculation engine** (`src/lib/calc.ts`): NQ $20/pt, MNQ $2/pt, NAS100 uses your configured $/pt per lot; fractional NAS100 lots; commissions and fees; R-multiple, planned R:R, holding time; manual overrides; tick-size and stop/target-side validation.
+- **Calculation engine** (`src/lib/calc.ts`): NQ $20/pt, MNQ $2/pt, NAS100 uses your configured $/pt per lot; fractional NAS100 lots; R-multiple, planned R:R, holding time; manual overrides; tick-size and stop/target-side validation.
 - **Security**: Supabase Auth + Row Level Security on every table; private storage bucket scoped to your user id.
 
 ## 1. Install
@@ -83,14 +83,14 @@ Each trade stores the point value, gross/net P&L, R-multiple and holding time it
 
 ## Calculation conventions
 
-- Long P&L = (Exit − Entry) × Point value × Contracts; Short = (Entry − Exit) × …; Net = Gross − Commission − Other fees.
+- Long P&L = (Exit − Entry) × Point value × Contracts; Short = (Entry − Exit) × …; Net = Gross. Commission and swap are no longer entered; type your P&L and it is used as the final result.
 - **R-multiple** = Net P&L ÷ risk. Risk = the Risk Amount you enter, otherwise |Entry − Stop| × point value × quantity. No stop and no risk amount means no R.
 - **Planned R:R** = |Target − Entry| ÷ |Entry − Stop|.
 - **Result** is Win / Loss / Breakeven from net P&L unless you override it. Counts and win rate use the Result field (so overrides count); win rate = wins ÷ total trades.
 - **Gross Profit / Gross Loss** are the sums of positive / negative *net* trade P&L, so they add up to Total Net P&L, and Profit Factor = Gross Profit ÷ |Gross Loss|.
 - **Max drawdown** is the largest peak-to-trough fall of the trade-by-trade equity curve (starting balance included for the % figure).
 - **Streaks** are ordered by date and entry time; a breakeven trade ends a streak.
-- **Entry/exit time and entry/exit price are optional.** With both prices blank, P&L cannot be derived, so it saves as $0 unless you enter a Gross P&L override. Holding time is 0 and excluded from the average when a time is missing.
+- **Entry/exit time and entry/exit price are optional.** With both prices blank, P&L cannot be derived, so it saves as $0 unless you type a P&L. Holding time is 0 and excluded from the average when a time is missing.
 - **Times** are wall-clock times in your trading time zone; an exit earlier than the entry is treated as passing midnight.
 - The **time zone setting** (default Asia/Manila) decides what "Today", "This Week" (Mon–Sun) and so on mean.
 

@@ -90,8 +90,6 @@ export function TradeDetailDialog({
                 <div>
                   <Row label="Point value used" value={`${money(trade.point_value)} / pt`} />
                   <Row label="Risk amount" value={trade.risk_amount != null ? money(trade.risk_amount) : "—"} />
-                  <Row label="Commission" value={money(trade.commission)} />
-                  <Row label="Swap / other fees" value={money(trade.other_fees)} />
                   <Row label="Holding time" value={formatDuration(trade.holding_minutes)} />
                   <Row label="Account" value={accounts.find((a) => a.id === trade.account_id)?.name ?? "Unassigned"} />
                 </div>

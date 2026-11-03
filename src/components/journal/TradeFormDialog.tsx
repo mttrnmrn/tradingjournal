@@ -26,8 +26,6 @@ interface FormState {
   take_profit: string;
   quantity: string;
   risk_amount: string;
-  commission: string;
-  other_fees: string;
   setup: string;
   market_bias: string;
   entry_reason: string;
@@ -68,8 +66,9 @@ function toInput(f: FormState): TradeInput {
     take_profit: parseOpt(f.take_profit),
     quantity: parseReq(f.quantity),
     risk_amount: parseOpt(f.risk_amount),
-    commission: f.commission.trim() === "" ? 0 : Number(f.commission),
-    other_fees: f.other_fees.trim() === "" ? 0 : Number(f.other_fees),
+    // fees are no longer entered: the P&L you type is the final result
+    commission: 0,
+    other_fees: 0,
     setup: f.setup,
     market_bias: (f.market_bias || null) as TradeInput["market_bias"],
     entry_reason: f.entry_reason,
@@ -117,8 +116,6 @@ export function TradeFormDialog({ open, onOpenChange, trade }: { open: boolean; 
     take_profit: "",
     quantity: "1",
     risk_amount: "",
-    commission: settings.default_commission ? String(settings.default_commission) : "",
-    other_fees: "",
     setup: "",
     market_bias: "",
     entry_reason: "",
@@ -146,8 +143,6 @@ export function TradeFormDialog({ open, onOpenChange, trade }: { open: boolean; 
     take_profit: str(t.take_profit),
     quantity: str(t.quantity),
     risk_amount: str(t.risk_amount),
-    commission: t.commission ? str(t.commission) : "",
-    other_fees: t.other_fees ? str(t.other_fees) : "",
     setup: t.setup ?? "",
     market_bias: t.market_bias ?? "",
     entry_reason: t.entry_reason ?? "",
@@ -156,7 +151,8 @@ export function TradeFormDialog({ open, onOpenChange, trade }: { open: boolean; 
     lessons: t.lessons ?? "",
     notes: t.notes ?? "",
     tag_ids: t.tag_ids,
-    override_gross_pnl: t.pnl_overridden ? str(t.gross_pnl) : "",
+    // older trades with fees keep their net result so editing never changes it silently
+    override_gross_pnl: t.pnl_overridden || t.commission || t.other_fees ? str(t.net_pnl) : "",
     override_r_multiple: t.r_overridden ? str(t.r_multiple) : "",
     override_status: t.status_overridden ? t.status : "",
   });
@@ -192,7 +188,7 @@ export function TradeFormDialog({ open, onOpenChange, trade }: { open: boolean; 
   const input = useMemo(() => toInput(form), [form]);
   const previewValid = useMemo(() => {
     const n = (v: number | null) => v == null || Number.isFinite(v);
-    return n(input.entry_price) && n(input.exit_price) && Number.isFinite(input.quantity) && input.quantity > 0 && n(input.stop_loss) && n(input.take_profit) && n(input.risk_amount) && Number.isFinite(input.commission) && Number.isFinite(input.other_fees);
+    return n(input.entry_price) && n(input.exit_price) && Number.isFinite(input.quantity) && input.quantity > 0 && n(input.stop_loss) && n(input.take_profit) && n(input.risk_amount) && n(input.override_gross_pnl);
   }, [input]);
   const calc = useMemo(() => (previewValid ? calculateTrade(input, settings) : null), [previewValid, input, settings]);
 
@@ -205,7 +201,7 @@ export function TradeFormDialog({ open, onOpenChange, trade }: { open: boolean; 
     setErrors(errs);
     if (Object.keys(errs).length) {
       toast("error", "Please fix the highlighted fields");
-      if (errs.override_gross_pnl || errs.override_r_multiple) setShowOverrides(true);
+      if (errs.override_r_multiple) setShowOverrides(true);
       return;
     }
     if (!user) return;
@@ -342,24 +338,19 @@ export function TradeFormDialog({ open, onOpenChange, trade }: { open: boolean; 
                 {num("take_profit", "Take profit", { step: futures ? "0.25" : "any" })}
                 {num("quantity", futures ? "Contracts" : "Lots", { step: futures ? "1" : "0.01", hint: futures ? "Whole contracts" : "Fractional lots allowed" })}
                 {num("risk_amount", `Risk amount (${cur})`, { step: "0.01", hint: "Blank = derived from stop loss" })}
-                {num("commission", `Commission (${cur})`, { step: "0.01" })}
-                {num("other_fees", `Swap / other fees (${cur})`, { step: "0.01" })}
+                {num("override_gross_pnl", `P&L (${cur})`, { step: "any", placeholder: "e.g. 250 or -120", hint: calc && !calc.pricesMissing ? `Blank = calculated from prices (${formatMoney(calc.auto.grossPnl, { currency: cur, sign: true })})` : "Your final result, negative for a loss" })}
               </div>
 
               {calc?.pricesMissing && !calc.pnlOverridden && (
                 <p className="mt-3 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-foreground">
-                  Without both entry and exit prices, P&amp;L can't be calculated and will save as {formatMoney(0, { currency: cur })} (before fees).{" "}
-                  <button type="button" className="font-medium text-primary underline" onClick={() => setShowOverrides(true)}>
-                    Enter a Gross P&amp;L instead
-                  </button>
+                  Without both entry and exit prices, P&amp;L can't be calculated and will save as {formatMoney(0, { currency: cur })}. Type your result in the P&amp;L field above.
                 </p>
               )}
 
               <div className="mt-4 rounded-lg border bg-muted/30 p-3">
                 <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3 lg:grid-cols-6">
                   <Calc label="Point value" value={calc ? `${formatMoney(calc.pointValue, { currency: cur })}/pt` : "—"} />
-                  <Calc label="Gross P&L" value={calc ? formatMoney(calc.grossPnl, { currency: cur, sign: true }) : "—"} tone={calc?.grossPnl} />
-                  <Calc label="Net P&L" value={calc ? formatMoney(calc.netPnl, { currency: cur, sign: true }) : "—"} tone={calc?.netPnl} strong />
+                  <Calc label="P&L" value={calc ? formatMoney(calc.netPnl, { currency: cur, sign: true }) : "—"} tone={calc?.netPnl} strong />
                   <Calc label="R-multiple" value={calc ? formatR(calc.rMultiple) : "—"} tone={calc?.rMultiple} />
                   <Calc label="Planned R:R" value={calc?.riskReward != null ? `1 : ${calc.riskReward.toFixed(2)}` : "—"} />
                   <Calc label="Holding" value={calc ? formatDuration(calc.holdingMinutes) : "—"} />
@@ -367,13 +358,10 @@ export function TradeFormDialog({ open, onOpenChange, trade }: { open: boolean; 
               </div>
 
               <button type="button" className="mt-3 text-xs font-medium text-primary hover:underline" onClick={() => setShowOverrides((s) => !s)}>
-                {showOverrides ? "Hide manual overrides" : "Override calculated values…"}
+                {showOverrides ? "Hide R-multiple override" : "Override R-multiple…"}
               </button>
               {showOverrides && (
                 <div className="mt-3 grid grid-cols-1 gap-3 rounded-lg border border-dashed p-3 sm:grid-cols-2">
-                  <Field label={`Gross P&L override (${cur})`} error={errors.override_gross_pnl} hint={calc ? `Calculated: ${formatMoney(calc.auto.grossPnl, { currency: cur })}. Fees are still deducted.` : "Fees are still deducted"}>
-                    <Input type="number" step="any" placeholder="Leave blank to use calculated" value={form.override_gross_pnl} onChange={(e) => set("override_gross_pnl", e.target.value)} />
-                  </Field>
                   <Field label="R-multiple override" error={errors.override_r_multiple} hint={calc ? `Calculated: ${formatR(calc.auto.rMultiple)}` : undefined}>
                     <Input type="number" step="any" placeholder="Leave blank to use calculated" value={form.override_r_multiple} onChange={(e) => set("override_r_multiple", e.target.value)} />
                   </Field>
