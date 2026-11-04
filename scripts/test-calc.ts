@@ -105,7 +105,8 @@ const s = computeStats(ts, 10000);
 assert.equal(s.netPnl, 500);
 assert.equal(s.grossProfit, 800);
 assert.equal(s.grossLoss, -300);
-assert.equal(s.winRate, 40);
+assert.equal(s.winRate, 50); // 2 wins / (2 wins + 2 losses): the breakeven is not a loss
+assert.equal(computeStats([ts[0], ts[4]], 0).winRate, 100);
 assert.ok(Math.abs((s.profitFactor as number) - 800 / 300) < 1e-9);
 assert.equal(s.maxLossStreak, 2);
 assert.equal(s.maxWinStreak, 1);
@@ -130,7 +131,7 @@ assert.equal(ds.days, 5);
 assert.equal(ds.winDays, 2);
 assert.equal(ds.lossDays, 2);
 assert.equal(ds.breakevenDays, 1);
-assert.equal(ds.winRate, 40);
+assert.equal(ds.winRate, 50);
 // weekly totals only count days inside the shown month
 const grid = monthGrid(ts, new Date(2026, 9, 1));
 assert.equal(grid.length % 7, 0);
@@ -221,16 +222,16 @@ assert.equal(sk.days.current, 2);
 assert.equal(sk.trades.current, 1);
 assert.equal(streakStats([]).days.currentType, null);
 
-// ---- trader score on ts (win 40%, PF 2.67, ratio 2.67, 4/5 documented, 0 stops, resilience 1/2)
+// ---- trader score on ts (win 50%, PF 2.67, ratio 2.67, 4/5 documented, 0 stops, resilience 1/2)
 const tsStats = computeStats(ts);
 const sc = traderScore(ts, tsStats)!;
 const ax = Object.fromEntries(sc.axes.map((a) => [a.key, a.value]));
-assert.equal(ax.win, 40);
+assert.equal(ax.win, 50);
 assert.ok(Math.abs(ax.profitFactor - (800 / 300 / 3) * 100) < 1e-9);
 assert.equal(ax.risk, 100);
 assert.equal(ax.discipline, 40);
 assert.equal(ax.resilience, 50);
-assert.equal(sc.total, 64);
+assert.equal(sc.total, 66);
 assert.equal(traderScore([], computeStats([])), null);
 const onlyWins = [mk(1, "2026-10-01", "Win", 100), mk(2, "2026-10-02", "Win", 50)];
 const ow = traderScore(onlyWins, computeStats(onlyWins))!;

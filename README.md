@@ -86,7 +86,7 @@ Each trade stores the point value, gross/net P&L, R-multiple and holding time it
 - Long P&L = (Exit − Entry) × Point value × Contracts; Short = (Entry − Exit) × …; Net = Gross. Commission and swap are no longer entered; type your P&L and it is used as the final result.
 - **R-multiple** = Net P&L ÷ risk. Risk = the Risk Amount you enter, otherwise |Entry − Stop| × point value × quantity. No stop and no risk amount means no R.
 - **Planned R:R** = |Target − Entry| ÷ |Entry − Stop|.
-- **Result** is Win / Loss / Breakeven from net P&L unless you override it. Counts and win rate use the Result field (so overrides count); win rate = wins ÷ total trades.
+- **Result** is Win / Loss / Breakeven from net P&L unless you override it. Counts and win rate use the Result field (so overrides count); win rate = wins ÷ (wins + losses), so breakevens are not counted as losses (same for day win %).
 - **Gross Profit / Gross Loss** are the sums of positive / negative *net* trade P&L, so they add up to Total Net P&L, and Profit Factor = Gross Profit ÷ |Gross Loss|.
 - **Max drawdown** is the largest peak-to-trough fall of the trade-by-trade equity curve (starting balance included for the % figure).
 - **Streaks** are ordered by date and entry time; a breakeven trade ends a streak.

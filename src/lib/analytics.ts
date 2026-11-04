@@ -7,7 +7,7 @@ import type { Instrument, Session, Tag, Trade } from "@/types";
  *  - Win / Loss / Breakeven counts use the trade's Result (status) field, which respects manual overrides.
  *  - Gross Profit = sum of net P&L of trades with net > 0; Gross Loss = sum of net P&L of trades with net < 0.
  *    So Gross Profit + Gross Loss = Total Net P&L, and Profit Factor = Gross Profit / |Gross Loss|.
- *  - Win rate = wins / total trades.
+ *  - Win rate = wins / (wins + losses); breakevens are not counted as losses.
  *  - Expectancy = net P&L per trade ($). R-expectancy = average R across trades that have an R value.
  */
 
@@ -124,7 +124,7 @@ export function computeStats(trades: Trade[], startingBalance = 0): Stats {
     netPnl: round2(netPnl),
     grossProfit: round2(grossProfit),
     grossLoss: round2(grossLoss),
-    winRate: ordered.length ? (wins.length / ordered.length) * 100 : 0,
+    winRate: wins.length + losses.length ? (wins.length / (wins.length + losses.length)) * 100 : 0,
     profitFactor,
     profitFactorInfinite: pfInf,
     avgWin: round2(avg(wins.map((t) => t.net_pnl))),
@@ -286,7 +286,7 @@ export interface DayStats {
   winDays: number;
   lossDays: number;
   breakevenDays: number;
-  winRate: number; // 0..100, share of trading days with positive net P&L
+  winRate: number; // 0..100, winning days / (winning + losing days); breakeven days excluded
 }
 
 export function dayStats(trades: Trade[]): DayStats {
@@ -298,7 +298,7 @@ export function dayStats(trades: Trade[]): DayStats {
     winDays,
     lossDays,
     breakevenDays: days.length - winDays - lossDays,
-    winRate: days.length ? (winDays / days.length) * 100 : 0,
+    winRate: winDays + lossDays ? (winDays / (winDays + lossDays)) * 100 : 0,
   };
 }
 
