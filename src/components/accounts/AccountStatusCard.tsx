@@ -3,6 +3,13 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatMoney } from "@/lib/utils";
 import type { AccountStatus } from "@/lib/accounts";
+import { PHASE_LABELS, type AccountPhase } from "@/types";
+
+const PHASE_STYLE: Record<AccountPhase, string> = {
+  evaluation: "border-primary/30 bg-primary/10 text-primary",
+  funded: "border-profit/30 bg-profit/10 text-profit",
+  breached: "border-loss/30 bg-loss/10 text-loss",
+};
 
 function LimitBar({
   label,
@@ -58,11 +65,12 @@ export function AccountStatusCard({ status, currency, actions }: { status: Accou
   const hasLimits = a.max_loss_limit != null || a.daily_loss_limit != null;
 
   return (
-    <Card className={cn("flex flex-col gap-4 p-4", (status.maxLossBreached || status.dailyBreachedToday) && "border-loss/40")}>
+    <Card className={cn("flex flex-col gap-4 p-4", (status.maxLossBreached || status.dailyBreachedToday || a.status === "breached") && "border-loss/40")}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h3 className="truncate text-sm font-semibold">{a.name}</h3>
           <div className="mt-1 flex flex-wrap gap-1.5">
+            <Badge className={PHASE_STYLE[a.status]}>{PHASE_LABELS[a.status]}</Badge>
             {status.maxLossBreached && <Badge className="border-loss/30 bg-loss/10 text-loss">Max loss breached</Badge>}
             {status.dailyBreachedToday && <Badge className="border-loss/30 bg-loss/10 text-loss">Daily limit hit today</Badge>}
           </div>

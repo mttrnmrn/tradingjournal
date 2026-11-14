@@ -1,6 +1,6 @@
 import { round2, type FieldErrors } from "@/lib/calc";
 import { dailyPnlMap, sortChrono } from "@/lib/analytics";
-import { UNASSIGNED, type Account, type MaxLossType, type Trade } from "@/types";
+import { UNASSIGNED, type Account, type AccountPhase, type MaxLossType, type Trade } from "@/types";
 
 /**
  * Account limit conventions (documented in README):
@@ -113,6 +113,7 @@ export function scopedStartingBalance(accounts: Account[], trades: Trade[], sele
 
 export interface AccountInput {
   name: string;
+  status: AccountPhase;
   starting_balance: number;
   max_loss_limit: number | null;
   max_loss_type: MaxLossType;

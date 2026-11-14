@@ -20,10 +20,15 @@ export type MaxLossType = "static" | "trailing";
 /** Token used in account filters for trades that have no account. */
 export const UNASSIGNED = "none";
 
+export const ACCOUNT_PHASES = ["evaluation", "funded", "breached"] as const;
+export type AccountPhase = (typeof ACCOUNT_PHASES)[number];
+export const PHASE_LABELS: Record<AccountPhase, string> = { evaluation: "Evaluation", funded: "Funded", breached: "Breached" };
+
 export interface Account {
   id: string;
   user_id: string;
   name: string;
+  status: AccountPhase; // set by you: Evaluation, Funded or Breached
   starting_balance: number;
   max_loss_limit: number | null; // $ (optional)
   max_loss_type: MaxLossType;

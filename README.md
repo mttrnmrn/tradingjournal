@@ -105,6 +105,10 @@ Each trade stores the point value, gross/net P&L, R-multiple and holding time it
 - Deleting an account keeps its trades as "Unassigned". New trades pre-select the filtered account, or the last one you used.
 - "Starting balance" in Settings is now the default for new accounts, and counts for trades that have no account.
 
+## Account status
+
+Each account has a Status you set yourself: Evaluation, Funded or Breached (Accounts page, Edit). It shows as a badge on the account card. Existing databases need `supabase/migration_account_status.sql` run once in the Supabase SQL Editor.
+
 ## Dashboard and Trader Score
 
 The dashboard follows a TradeZella-style layout: KPI row (with current day/trade streaks), Trader Score radar, cumulative and daily P&L, progress tracker heatmap, account balance chart, calendar with weekly totals and monthly stats, and recent/largest trades.

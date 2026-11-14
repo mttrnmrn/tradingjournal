@@ -146,7 +146,7 @@ assert.equal(r.to, "2026-11-01");
 assert.deepEqual(resolveRange({ preset: "month" }, "UTC", new Date("2026-10-30T12:00:00Z")), { from: "2026-10-01", to: "2026-10-31" });
 
 // ---- accounts: balance, max loss (static / trailing), daily loss
-const acct: Account = { id: "A", user_id: "u", name: "Prop 10k", starting_balance: 10000, max_loss_limit: 1000, max_loss_type: "static", daily_loss_limit: 500, created_at: "" };
+const acct: Account = { id: "A", user_id: "u", name: "Prop 10k", status: "evaluation", starting_balance: 10000, max_loss_limit: 1000, max_loss_type: "static", daily_loss_limit: 500, created_at: "" };
 const day = [mk(1, "2026-10-01", "Loss", -300), mk(2, "2026-10-02", "Win", 800), mk(3, "2026-10-03", "Loss", -550)];
 let st = accountStatus(acct, day, "2026-10-03");
 assert.equal(st.balance, 9950);
@@ -199,10 +199,10 @@ assert.equal(scopedStartingBalance([acct, accB], scoped, ["A"], 2000), 10000);
 assert.equal(scopedStartingBalance([acct, accB], scoped, ["A", "B"], 2000), 15000);
 assert.equal(scopedStartingBalance([acct, accB], scoped.slice(0, 2), [], 2000), 15000); // no unassigned trades -> default not added
 assert.equal(scopedStartingBalance([], scoped, [], 2000), 2000); // no accounts at all
-assert.ok(validateAccount({ name: " ", starting_balance: 100, max_loss_limit: null, max_loss_type: "static", daily_loss_limit: null }, []).name);
-assert.ok(validateAccount({ name: "prop 10K", starting_balance: 100, max_loss_limit: null, max_loss_type: "static", daily_loss_limit: null }, ["Prop 10k"]).name);
-assert.ok(validateAccount({ name: "X", starting_balance: NaN, max_loss_limit: 0, max_loss_type: "static", daily_loss_limit: -5 }, []).starting_balance);
-assert.deepEqual(validateAccount({ name: "X", starting_balance: 0, max_loss_limit: null, max_loss_type: "static", daily_loss_limit: null }, []), {});
+assert.ok(validateAccount({ status: "evaluation", name: " ", starting_balance: 100, max_loss_limit: null, max_loss_type: "static", daily_loss_limit: null }, []).name);
+assert.ok(validateAccount({ status: "evaluation", name: "prop 10K", starting_balance: 100, max_loss_limit: null, max_loss_type: "static", daily_loss_limit: null }, ["Prop 10k"]).name);
+assert.ok(validateAccount({ status: "evaluation", name: "X", starting_balance: NaN, max_loss_limit: 0, max_loss_type: "static", daily_loss_limit: -5 }, []).starting_balance);
+assert.deepEqual(validateAccount({ status: "evaluation", name: "X", starting_balance: 0, max_loss_limit: null, max_loss_type: "static", daily_loss_limit: null }, []), {});
 
 // ---- streaks (ts: Win, Loss, Loss, Win, Breakeven on consecutive days)
 let sk = streakStats(ts);

@@ -68,6 +68,7 @@ create table if not exists public.accounts (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
   name text not null check (char_length(btrim(name)) > 0),
+  status text not null default 'evaluation' check (status in ('evaluation', 'funded', 'breached')),
   starting_balance numeric(14,2) not null default 0 check (starting_balance >= 0),
   max_loss_limit numeric(14,2) check (max_loss_limit is null or max_loss_limit > 0),
   max_loss_type text not null default 'static' check (max_loss_type in ('static', 'trailing')),

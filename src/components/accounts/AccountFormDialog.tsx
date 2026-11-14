@@ -8,10 +8,11 @@ import { useToast } from "@/components/ui/toast";
 import { validateAccount, type AccountInput } from "@/lib/accounts";
 import type { FieldErrors } from "@/lib/calc";
 import { createAccount, updateAccount } from "@/services/accounts";
-import type { Account, MaxLossType } from "@/types";
+import { ACCOUNT_PHASES, PHASE_LABELS, type Account, type AccountPhase, type MaxLossType } from "@/types";
 
 interface FormState {
   name: string;
+  status: AccountPhase;
   starting_balance: string;
   max_loss_limit: string;
   max_loss_type: MaxLossType;
@@ -25,7 +26,7 @@ export function AccountFormDialog({ open, onOpenChange, account }: { open: boole
   const { user } = useAuth();
   const { accounts, settings, refresh } = useData();
   const toast = useToast();
-  const [f, setF] = useState<FormState>({ name: "", starting_balance: "", max_loss_limit: "", max_loss_type: "static", daily_loss_limit: "" });
+  const [f, setF] = useState<FormState>({ name: "", status: "evaluation", starting_balance: "", max_loss_limit: "", max_loss_type: "static", daily_loss_limit: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
 
@@ -34,8 +35,8 @@ export function AccountFormDialog({ open, onOpenChange, account }: { open: boole
     setErrors({});
     setF(
       account
-        ? { name: account.name, starting_balance: String(account.starting_balance), max_loss_limit: str(account.max_loss_limit), max_loss_type: account.max_loss_type, daily_loss_limit: str(account.daily_loss_limit) }
-        : { name: "", starting_balance: settings.starting_balance > 0 ? String(settings.starting_balance) : "", max_loss_limit: "", max_loss_type: "static", daily_loss_limit: "" },
+        ? { name: account.name, status: account.status, starting_balance: String(account.starting_balance), max_loss_limit: str(account.max_loss_limit), max_loss_type: account.max_loss_type, daily_loss_limit: str(account.daily_loss_limit) }
+        : { name: "", status: "evaluation", starting_balance: settings.starting_balance > 0 ? String(settings.starting_balance) : "", max_loss_limit: "", max_loss_type: "static", daily_loss_limit: "" },
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, account?.id]);
@@ -49,6 +50,7 @@ export function AccountFormDialog({ open, onOpenChange, account }: { open: boole
     e.preventDefault();
     const input: AccountInput = {
       name: f.name,
+      status: f.status,
       starting_balance: f.starting_balance.trim() === "" ? NaN : Number(f.starting_balance),
       max_loss_limit: opt(f.max_loss_limit),
       max_loss_type: f.max_loss_type,
@@ -84,6 +86,15 @@ export function AccountFormDialog({ open, onOpenChange, account }: { open: boole
           <DialogBody className="space-y-4">
             <Field label="Account name" error={errors.name}>
               <Input autoFocus value={f.name} invalid={Boolean(errors.name)} maxLength={60} placeholder="e.g. Prop firm 50k" onChange={(e) => set("name", e.target.value)} />
+            </Field>
+            <Field label="Status" hint={f.status === "breached" ? "Marked as breached. Your trades and stats stay as they are." : "Change this when you pass the evaluation or breach the account"}>
+              <Select value={f.status} onChange={(e) => set("status", e.target.value as AccountPhase)}>
+                {ACCOUNT_PHASES.map((p) => (
+                  <option key={p} value={p}>
+                    {PHASE_LABELS[p]}
+                  </option>
+                ))}
+              </Select>
             </Field>
             <Field label={`Starting balance (${cur})`} error={errors.starting_balance}>
               <Input type="number" inputMode="decimal" step="0.01" min="0" value={f.starting_balance} invalid={Boolean(errors.starting_balance)} onChange={(e) => set("starting_balance", e.target.value)} />

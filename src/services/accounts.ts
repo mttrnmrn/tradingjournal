@@ -1,8 +1,9 @@
 import { supabase } from "@/lib/supabase";
-import type { Account, MaxLossType } from "@/types";
+import type { Account, AccountPhase, MaxLossType } from "@/types";
 
 export interface AccountInput {
   name: string;
+  status: AccountPhase;
   starting_balance: number;
   max_loss_limit: number | null;
   max_loss_type: MaxLossType;
@@ -14,6 +15,7 @@ const optNum = (v: unknown) => (v == null ? null : Number(v));
 function normalize(r: any): Account {
   return {
     ...r,
+    status: (r.status ?? "evaluation") as AccountPhase,
     starting_balance: Number(r.starting_balance),
     max_loss_limit: optNum(r.max_loss_limit),
     daily_loss_limit: optNum(r.daily_loss_limit),
